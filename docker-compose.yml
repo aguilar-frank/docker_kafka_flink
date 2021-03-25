@@ -5,6 +5,7 @@ services:
         ports:
                 - "8081:8081"
         command: jobmanager
+        container_name: jobmanager
         environment:
                 - |
                   FLINK_PROPERTIES=
@@ -14,6 +15,7 @@ services:
 
   taskmanager:
         image: flink
+        container_name: taskmanager0
         depends_on:
                 - jobmanager
         command: taskmanager
@@ -28,6 +30,7 @@ services:
   zookeeper:
           image: zookeeper
           hostname: zookeeper
+          container_name: zookeeper
           ports:
                 - '2181:2181'
           networks:
@@ -37,6 +40,7 @@ services:
           ports:
                 - '32000:32000'
           hostname: kafka0
+          container_name: kafka0
           depends_on:
                   - zookeeper
           environment:
@@ -54,6 +58,7 @@ services:
           ports:
                 - '32001:32001'
           hostname: kafka1
+          container_name: kafka1
           depends_on:
                 - zookeeper
           environment:

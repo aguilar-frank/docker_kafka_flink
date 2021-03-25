@@ -1,23 +1,25 @@
 #!/bin/sh
 
 # Optional ENV variables:
+# * BROKER_ID =  This must be set to a unique integer for each broker
+# * ZOOKEEPER_CONNECT =  Specifies the ZooKeeper connection string in the form hostname:port where host and port are the host and port of a ZooKeeper server
+# * ADVERTISED_LISTENERS = list of listeners with their host/IP and port. This is the metadata that’s passed back to client
+# * LISTENERS =  Name of listener used for communication between controller and brokers.
+# * LISTENER_SECURITY_PROTOCOL_MAP = security protocol to connect to the broker.
 # * ADVERTISED_HOST: the external ip for the container, e.g. `docker-machine ip \`docker-machine active\``
-# * ADVERTISED_PORT: the external port for Kafka, e.g. 9092
+# * ADVERTISED_PORT: the external port for Kafka, e.g. 32000
 # * LOG_RETENTION_HOURS: the minimum age of a log file in hours to be eligible for deletion (default is 168, for 1 week)
 # * LOG_RETENTION_BYTES: configure the size at which segments are pruned from the log, (default is 1073741824, for 1GB)
 # * NUM_PARTITIONS: configure the default number of log partitions per topic
-# * ZOOKEEPER_CONNECT
-# * BROKER_ID 
-# * LOG_DIRS
+# * LOG_DIRS = The directory where the logs is save
 
-# * ADVERTISED_LISTENERS: 
-# * LISTENERS
-# * LISTENER_SECURITY_PROTOCOL_MAP
+
 
 
 ############################# BROKER ID #############################
 
-# Set id of the broker. This must be set to a unique integer for each broker.
+ # BROKER_ID
+
 if [ ! -z "$BROKER_ID" ]; then
     echo "broker id: $BROKER_ID"
     sed -r -i "s/(broker.id)=(.*)/\1=$BROKER_ID/g" $KAFKA_HOME/config/server.properties
@@ -26,13 +28,11 @@ else
     exit 1
 fi
 
-# if [! -z "$PORT_KAFKA" ]
-
-
 
 ############################# Socket Server Settings #############################
 
-# Set the external host
+ # ADVERTISED_HOST
+
 if [ ! -z "$ADVERTISED_HOST" ]; then
     echo "advertised host: $ADVERTISED_HOST"
     if grep -q "^advertised.host.name" $KAFKA_HOME/config/server.properties; then
@@ -43,7 +43,8 @@ if [ ! -z "$ADVERTISED_HOST" ]; then
 fi
 
 
-# Set the external port
+ # ADVERTISED_PORT
+ 
 if [ ! -z "$ADVERTISED_PORT" ]; then
     echo "advertised port: $ADVERTISED_PORT"
     if grep -q "^advertised.port" $KAFKA_HOME/config/server.properties; then
@@ -58,6 +59,7 @@ fi
 
 
 #  LISTENERS = INTERNAL://:9092,EXTERNAL://:PORT
+
 if [ ! -z "$ADVERTISED_PORT"  ]; then
     echo "listeners: $LISTENERS"
     if grep -q "^listeners" $KAFKA_HOME/config/server.properties; then
@@ -70,8 +72,8 @@ fi
 
 
 
- # advertised.listeners = INTERNAL://:9092,EXTERNAL://<HOST_NAME>:<PORT>
- # ADVERTISED_LISTENERS is a comma-separated list of listeners with their host/IP and port. This is the metadata that’s passed back to client
+ # ADVERTISED_LISTENERS = INTERNAL://<HOST>:9092,EXTERNAL://localhost:<PORT>
+
 if [ ! -z "$ADVERTISED_PORT" ]; then
     echo "advertised listeners: $ADVERTISED_PORT"
     if grep -q "^advertised.listeners" $KAFKA_HOME/config/server.properties; then
@@ -84,7 +86,9 @@ fi
 
 
 
- # Maps listener names to security protocols
+ # LISTENER_SECURITY_PROTOCOL_MAP
+
+#SECURITY_PROTOCOL_MAP = PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
 
 if [ ! -z "$LISTENER_SECURITY_PROTOCOL_MAP"  ]; then
     echo "listener security protocol map: $LISTENER_SECURITY_PROTOCOL_MAP"
@@ -94,6 +98,18 @@ if [ ! -z "$LISTENER_SECURITY_PROTOCOL_MAP"  ]; then
         echo "listener.security.protocol.map=$LISTENER_SECURITY_PROTOCOL_MAP" >> $KAFKA_HOME/config/server.properties
     fi
 fi
+
+
+ # INTER_BROKER_LISTENER_NAME: INTERNAL 
+ 
+ if [ ! -z "$INTER_BROKER_LISTENER_NAME"  ]; then
+    echo "inter broker listener name: $INTER_BROKER_LISTENER_NAME"
+    if grep -q "^inter.broker.listener.name" $KAFKA_HOME/config/server.properties; then
+        sed -r -i "s/#(inter.broker.listener.name)=(.*)/\1=$INTER_BROKER_LISTENER_NAME/g" $KAFKA_HOME/config/server.properties
+    else
+        echo "inter.broker.listener.name=$INTER_BROKER_LISTENER_NAME" >> $KAFKA_HOME/config/server.properties
+    fi
+ fi
 
 
 ############################# Zookeeper #############################
@@ -143,18 +159,6 @@ if [ ! -z "$AUTO_CREATE_TOPICS" ]; then
     echo "auto.create.topics.enable=$AUTO_CREATE_TOPICS" >> $KAFKA_HOME/config/server.properties
 fi
 
-
-
-
- # INTER_BROKER_LISTENER_NAME: INTERNAL 
- if [ ! -z "$INTER_BROKER_LISTENER_NAME"  ]; then
-    echo "inter broker listener name: $INTER_BROKER_LISTENER_NAME"
-    if grep -q "^inter.broker.listener.name" $KAFKA_HOME/config/server.properties; then
-        sed -r -i "s/#(inter.broker.listener.name)=(.*)/\1=$INTER_BROKER_LISTENER_NAME/g" $KAFKA_HOME/config/server.properties
-    else
-        echo "inter.broker.listener.name=$INTER_BROKER_LISTENER_NAME" >> $KAFKA_HOME/config/server.properties
-    fi
- fi
 
 
 
