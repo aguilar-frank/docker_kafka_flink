@@ -17,6 +17,4 @@ RUN     chmod a+x /usr/bin/start-kafka.sh
 
 EXPOSE 9092 
 
-# ENTRYPOINT  ["$KAFKA_HOME/bin/kafka-server-start.sh" "$KAFKA_HOME/config/server.properties" ]
-# CMD ["$KAFKA_HOME/bin/kafka-server-start.sh" "$KAFKA_HOME/config/server.properties" ]
 CMD ["start-kafka.sh"]
