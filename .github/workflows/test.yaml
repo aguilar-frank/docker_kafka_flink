@@ -1,21 +1,45 @@
-name: Secrets
+# This is a basic workflow to apply AWS/Github upload
+name: 'Upload Website'
 
-on: [push]
+# Controls when the action will run.
+on:
+  push:
+    branches:
+    - main
+    - develop
+    - release
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:     
 
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
 
-  dev:
-    name: dev
-    runs-on: ubuntu-18.04
-    env:
-      ENVIRONMENT: DEV
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
     steps:
-      - run: echo ${{ secrets[format('{0}_A', env.ENVIRONMENT)] }}
+      - uses: actions/checkout@v2
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
+      - name: Prepare Outputs
+        id: prepare-step
+        # Sets this step's outputs, that later on will be exported as the job's outputs
+        run: |
+          echo "::set-output name=aws_s3_bucket_name::AWS_S3_BUCKET_${GITHUB_REF_SLUG}";
+    # Sets this job's, that will be consumed by other jobs
+    # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
+    outputs:
+      aws_s3_bucket_name: ${{ steps.prepare-step.outputs.aws_s3_bucket_name }}
 
-  test:
-    name: test
-    runs-on: ubuntu-18.04
+  website-ci:
+    name: 'Website CI' 
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    # Environment variables
     env:
-      ENVIRONMENT: TEST
+      # AWS_S3_BUCKET_NAME: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name
+      AWS_S3_BUCKET: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name  
     steps:
-      - run: echo ${{ secrets[format('{0}_A', env.ENVIRONMENT)] }}
+      - run: echo ${{ secret_AWS_S3_BUCKET}}
+
+
