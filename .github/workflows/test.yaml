@@ -37,9 +37,12 @@ jobs:
     runs-on: ubuntu-latest
     # Environment variables
     env:
-      # AWS_S3_BUCKET_NAME: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name
-      AWS_S3_BUCKET: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name  
+      AWS_S3_BUCKET_NAME: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name
+      #AWS_S3_BUCKET: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name  
     steps:
-      - run: echo ${{secrets.AWS_S3_BUCKET}}
+      - name: Test
+        env:
+          AWS_S3_BUCKET: ${{ secrets[env.AWS_S3_BUCKET_NAME] }}
+        run: echo ${{secrets.AWS_S3_BUCKET}}
 
 
