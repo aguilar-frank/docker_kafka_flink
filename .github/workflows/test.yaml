@@ -40,6 +40,6 @@ jobs:
       # AWS_S3_BUCKET_NAME: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name
       AWS_S3_BUCKET: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name  
     steps:
-      - run: echo ${{ secret_AWS_S3_BUCKET}}
+      - run: echo ${{ secret.AWS_S3_BUCKET}}
 
 
