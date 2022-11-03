@@ -43,7 +43,7 @@ jobs:
         with:
           folder:  static  
           bucket: ${{steps.get-bucket-name.outputs.bucket}}
-          bucket-region: us-east-1
+          bucket-region: eu-west-1
 
 
 
