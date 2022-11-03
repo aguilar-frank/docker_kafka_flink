@@ -5,7 +5,7 @@ name: 'Upload Website'
 on:
   push:
     branches:
-    - main
+    - master
     - develop
     - release
   # Allows you to run this workflow manually from the Actions tab
@@ -13,38 +13,37 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-
-  prepare:
-    name: Prepare
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v3.x
-      - name: Prepare Outputs
-        id: prepare-step
-        # Sets this step's outputs, that later on will be exported as the job's outputs
-        run: |
-          echo "::set-output name=aws_s3_bucket_name::AWS_S3_BUCKET_${GITHUB_REF_SLUG}";
-    # Sets this job's, that will be consumed by other jobs
-    # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idoutputs
-    outputs:
-      aws_s3_bucket_name: ${{ steps.prepare-step.outputs.aws_s3_bucket_name }}
-
   website-ci:
     name: 'Website CI' 
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     # Environment variables
     env:
-      AWS_S3_BUCKET_NAME: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name
-      #AWS_S3_BUCKET: ${{ needs.prepare.outputs.aws_s3_bucket_name }} # bucket name  
+      BUCKET_PROD: "test-frank-delete"
+      BUCKET_DEV: "test-frank-delete" 
+      BUCKET_QA: "test-frank-delete"
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}         
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - uses: actions/checkout@v2
-      - name: Test
-        env:
-          AWS_S3_BUCKET: ${{ secrets[env.AWS_S3_BUCKET_NAME] }}
-        run: |
-          printenv | grep AWS_
+      - name: Get bucket name 
+        id: get-bucket-name
+        run: | 
+          if [[ $GITHUB_REF == "main"  ]] ; then 
+            echo "bucket=${{env.BUCKET_PROD}}" >> $GITHUB_OUTPUT
+          elif [[ $GITHUB_REF == "develop"  ]] ; then 
+            echo "bucket=${{env.BUCKET_DEV}}" >> $GITHUB_OUTPUT
+          else 
+            echo "bucket=${{env.BUCKET_QA}}" >> $GITHUB_OUTPUT
+          fi
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Sync with S3 bucket
+        uses: reggionick/s3-deploy@v3
+        with:
+          folder:  static  
+          bucket: ${{steps.get-bucket-name.outputs.bucket}}
+          bucket-region: us-east-1
+
 
 
